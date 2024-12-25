@@ -10,17 +10,17 @@ We will expand the model by integrating **economic dynamics** (e.g., resource pr
 #### **Mechanics**:
 1. **Resource Pricing**:
    - Adjust resource prices based on supply and demand:  
-     \( P_{\text{resource}}(t) = P_{\text{base}} \cdot \left(1 - \frac{R(t)}{D(t)}\right) \)  
+     $$ P_{\text{resource}}(t) = P_{\text{base}} \cdot \left(1 - \frac{R(t)}{D(t)}\right) $$  
      where \( P_{\text{base}} \) is the base price, \( R(t) \) is the resource availability, and \( D(t) \) is the demand.
 
 2. **Trade Adjustments**:
    - Simulate trade between resource-rich and resource-poor regions:  
-     \( T_{\text{adjusted}}(i, j) = \phi \cdot \left(R_{\text{region}_i} - R_{\text{region}_j}\right) \)  
+     $$ T_{\text{adjusted}}(i, j) = \phi \cdot \left(R_{\text{region}_i} - R_{\text{region}_j}\right) $$  
      where \( \phi \) is the trade factor.
 
 3. **Economic Incentives**:
    - Introduce incentives for resource redistribution:  
-     \( I_{\text{region}} = \kappa \cdot \left(R_{\text{surplus}} - R_{\text{average}}\right) \)  
+     $$ I_{\text{region}} = \kappa \cdot \left(R_{\text{surplus}} - R_{\text{average}}\right) $$  
      where \( \kappa \) is the incentive multiplier.
 
 ---
@@ -30,12 +30,12 @@ We will expand the model by integrating **economic dynamics** (e.g., resource pr
 #### **Mechanics**:
 1. **Seasonal Variability**:
    - Introduce periodic changes in carrying capacity:  
-     \( K_{\text{seasonal}}(t) = K_{\text{base}} \cdot \left(1 + \eta \cdot \sin(\omega t)\right) \)  
+     $$ K_{\text{seasonal}}(t) = K_{\text{base}} \cdot \left(1 + \eta \cdot \sin(\omega t)\right) $$  
      where \( \eta \) is the amplitude and \( \omega \) is the frequency.
 
 2. **Extreme Climate Events**:
    - Simulate infrequent but impactful events like droughts or floods:  
-     \( R_{\text{event}} = R(t) \cdot \left(1 - \delta_{\text{event}}\right) \)  
+     $$ R_{\text{event}} = R(t) \cdot \left(1 - \delta_{\text{event}}\right) $$  
      where \( \delta_{\text{event}} \) is the reduction factor.
 
 ---
