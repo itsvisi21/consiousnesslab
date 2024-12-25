@@ -8,6 +8,50 @@
 
 ### Implementing Fix and Re-Running:
 ```
+# Reintroducing Adaptive Hub Dynamics to the Model
+# Constants for Hub Dynamics
+hub_effect_coefficient = 0.05  # Influence strength of adaptive hubs
+
+# Model with Diffusion and Adaptive Hub Dynamics
+def diffusion_with_hub(prey_grid, predator_grid, K_current, alpha, beta, delta, diffusion_coefficient, effective_hub, hub_coefficient):
+    prey_history = []
+    predator_history = []
+    Psi_history = []
+
+    for t in range(len(time_steps_ecosystem)):
+        # Adaptive Hub Influence
+        Psi_dynamic = effective_hub * (1 + hub_coefficient * np.sin(0.05 * time_steps_ecosystem[t]))
+        Psi_history.append(Psi_dynamic.copy())
+
+        # Diffusion Terms
+        prey_diffusion = diffusion_coefficient * laplacian(prey_grid)
+        predator_diffusion = diffusion_coefficient * laplacian(predator_grid)
+
+        # Update Growth, Predation, and Diffusion with Hub Influence
+        prey_growth = prey_grid * (1 - prey_grid / K_current[t]) * (1 + Psi_dynamic)
+        predation = alpha * predator_grid * prey_grid
+        predator_growth = beta * predator_grid * prey_grid * (1 + Psi_dynamic)
+        predator_death = delta * predator_grid
+
+        # Update Grids
+        prey_grid += prey_growth - predation + prey_diffusion
+        predator_grid += predator_growth - predator_death + predator_diffusion
+
+        # Ensure Non-Negative Populations
+        prey_grid = np.maximum(prey_grid, 0)
+        predator_grid = np.maximum(predator_grid, 0)
+
+        # Cap Values to Prevent Overflows
+        prey_grid = np.minimum(prey_grid, 100)  # Cap prey population
+        predator_grid = np.minimum(predator_grid, 50)  # Cap predator population
+
+        # Record Histories
+        prey_history.append(prey_grid.copy())
+        predator_history.append(predator_grid.copy())
+
+    return prey_history, predator_history, Psi_history
+
+
 # Adjust the effective hub grid to match the simplified grid size
 effective_hub_simple = np.resize(effective_hub, (grid_size_simplified, grid_size_simplified))
 
