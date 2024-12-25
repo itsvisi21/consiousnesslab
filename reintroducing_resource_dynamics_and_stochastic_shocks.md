@@ -9,15 +9,13 @@ We will expand the model by incorporating **resource dynamics** and **stochastic
 
 #### **Mechanics**:
 1. **Regeneration and Depletion**:
-   - Regenerate resources based on carrying capacity:
-     \[
-     R_{\text{regen}}(x, y) = R_{\text{current}}(x, y) + \mu \cdot \left(K(x, y) - R_{\text{current}}(x, y)\right)
-     \]
+   - Regenerate resources based on carrying capacity:  
+     ![Regeneration Equation](https://latex.codecogs.com/svg.latex?R_{\text{regen}}(x,%20y)%20=%20R_{\text{current}}(x,%20y)%20+%20\mu%20\cdot%20\left(K(x,%20y)%20-%20R_{\text{current}}(x,%20y)\right))
+
      - \( \mu \): Resource regeneration rate.
-   - Deplete resources proportional to population consumption:
-     \[
-     R_{\text{depleted}}(x, y) = R_{\text{current}}(x, y) - \lambda \cdot P(x, y)
-     \]
+   - Deplete resources proportional to population consumption:  
+     ![Depletion Equation](https://latex.codecogs.com/svg.latex?R_{\text{depleted}}(x,%20y)%20=%20R_{\text{current}}(x,%20y)%20-%20\lambda%20\cdot%20P(x,%20y))
+
      - \( \lambda \): Resource consumption rate.
 
 ---
@@ -26,17 +24,14 @@ We will expand the model by incorporating **resource dynamics** and **stochastic
 
 #### **Mechanics**:
 1. **Random Resource Disturbances**:
-   - Simulate unpredictable resource changes:
-     \[
-     R_{\text{shock}} = R(x, y) \cdot \left(1 + \mathcal{N}(0, \sigma^2)\right)
-     \]
+   - Simulate unpredictable resource changes:  
+     ![Shock Equation](https://latex.codecogs.com/svg.latex?R_{\text{shock}}%20=%20R(x,%20y)%20\cdot%20\left(1%20+%20\mathcal{N}(0,%20\sigma^2)\right))
+
      - \( \sigma \): Standard deviation of shocks.
 
 2. **Population Shocks**:
-   - Apply random growth or decline in populations:
-     \[
-     P_{\text{shock}}(x, y) = P(x, y) \cdot \left(1 + \mathcal{N}(0, \sigma^2)\right)
-     \]
+   - Apply random growth or decline in populations:  
+     ![Population Shock Equation](https://latex.codecogs.com/svg.latex?P_{\text{shock}}(x,%20y)%20=%20P(x,%20y)%20\cdot%20\left(1%20+%20\mathcal{N}(0,%20\sigma^2)\right))
 
 ---
 
