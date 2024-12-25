@@ -12,8 +12,8 @@ We will expand the model by integrating **economic dynamics** (e.g., resource pr
    - Adjust resource prices based on supply and demand:
      $$
      P_{\text{resource}}(t) = P_{\text{base}} \cdot \left(1 - \frac{R(t)}{D(t)}\right)
-     $$
-     - \( P_{\text{base}} \): Base price; \( R(t) \): Resource availability; \( D(t) \): Demand.
+    - \( P_{\text{base}} \): Base price; \( R(t) \): Resource availability; \( D(t) \): Demand.
+      $$
 
 2. **Trade Adjustments**:
    - Simulate trade between resource-rich and resource-poor regions:
