@@ -1,5 +1,5 @@
 ### **Simulation Results: Resource Dynamics and Stochastic Shocks**
-
+```
 # Constants for Resource Dynamics and Stochastic Shocks
 resource_regeneration_rate = 0.1  # Rate of resource regeneration
 resource_consumption_rate = 0.02  # Rate of resource depletion by populations
@@ -9,7 +9,7 @@ shock_variance = 0.05  # Variance for stochastic shocks
 resource_grid_simple = np.ones((grid_size_simplified, grid_size_simplified)) * 50  # Initial resources
 
 # Resource Dynamics: Regeneration and Depletion
-"""
+
 def update_resources(resource_grid, prey_grid, regeneration_rate, consumption_rate, carrying_capacity):
     
     # Updates resources based on regeneration and population consumption.
@@ -90,8 +90,8 @@ axs[1].set_title("Final Prey Distribution with Resources and Shocks")
 axs[2].imshow(predator_history_resources[-1], cmap="Reds", interpolation="nearest")
 axs[2].set_title("Final Predator Distribution with Resources and Shocks")
 plt.show()
+```
 
-"""
 #### **1. Observations:**
 1. **Resource Distribution (Blue):**
    - Resources regenerate dynamically but are depleted in prey-rich regions.
