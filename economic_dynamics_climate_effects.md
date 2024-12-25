@@ -10,18 +10,15 @@ We will expand the model by integrating **economic dynamics** (e.g., resource pr
 #### **Mechanics**:
 1. **Resource Pricing**:
    - Adjust resource prices based on supply and demand:  
-     $$ P_{\text{resource}}(t) = P_{\text{base}} \cdot \left(1 - \frac{R(t)}{D(t)}\right) $$  
-     where \( P_{\text{base}} \) is the base price, \( R(t) \) is the resource availability, and \( D(t) \) is the demand.
+     ![Resource Pricing](https://latex.codecogs.com/svg.latex?P_{\text{resource}}(t)%20=%20P_{\text{base}}%20\cdot%20\left(1%20-%20\frac{R(t)}{D(t)}\right))
 
 2. **Trade Adjustments**:
    - Simulate trade between resource-rich and resource-poor regions:  
-     $$ T_{\text{adjusted}}(i, j) = \phi \cdot \left(R_{\text{region}_i} - R_{\text{region}_j}\right) $$  
-     where \( \phi \) is the trade factor.
+     ![Trade Adjustments](https://latex.codecogs.com/svg.latex?T_{\text{adjusted}}(i,%20j)%20=%20\phi%20\cdot%20\left(R_{\text{region}_i}%20-%20R_{\text{region}_j}\right))
 
 3. **Economic Incentives**:
    - Introduce incentives for resource redistribution:  
-     $$ I_{\text{region}} = \kappa \cdot \left(R_{\text{surplus}} - R_{\text{average}}\right) $$  
-     where \( \kappa \) is the incentive multiplier.
+     ![Economic Incentives](https://latex.codecogs.com/svg.latex?I_{\text{region}}%20=%20\kappa%20\cdot%20\left(R_{\text{surplus}}%20-%20R_{\text{average}}\right))
 
 ---
 
@@ -30,13 +27,11 @@ We will expand the model by integrating **economic dynamics** (e.g., resource pr
 #### **Mechanics**:
 1. **Seasonal Variability**:
    - Introduce periodic changes in carrying capacity:  
-     $$ K_{\text{seasonal}}(t) = K_{\text{base}} \cdot \left(1 + \eta \cdot \sin(\omega t)\right) $$  
-     where \( \eta \) is the amplitude and \( \omega \) is the frequency.
+     ![Seasonal Variability](https://latex.codecogs.com/svg.latex?K_{\text{seasonal}}(t)%20=%20K_{\text{base}}%20\cdot%20\left(1%20+%20\eta%20\cdot%20\sin(\omega%20t)\right))
 
 2. **Extreme Climate Events**:
    - Simulate infrequent but impactful events like droughts or floods:  
-     $$ R_{\text{event}} = R(t) \cdot \left(1 - \delta_{\text{event}}\right) $$  
-     where \( \delta_{\text{event}} \) is the reduction factor.
+     ![Extreme Climate Events](https://latex.codecogs.com/svg.latex?R_{\text{event}}%20=%20R(t)%20\cdot%20\left(1%20-%20\delta_{\text{event}}\right))
 
 ---
 
