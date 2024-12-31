@@ -225,9 +225,25 @@ import random
 
 # Initialize parameters
 POPULATION_SIZE = 100
-GENERATIONS = 50
+GENERATIONS = 25
 CROSSOVER_RATE = 0.8
 MUTATION_RATE = 0.1
+
+def is_valid_prediction(prediction):
+    # Validate main numbers: 5 unique numbers between 1 and 50
+    if len(prediction["Main Numbers"]) != 5 or not all(1 <= num <= 50 for num in prediction["Main Numbers"]):
+        return False
+
+    # Validate euro numbers: 2 unique numbers between 1 and 12
+    if len(prediction["Euro Numbers"]) != 2 or not all(1 <= num <= 12 for num in prediction["Euro Numbers"]):
+        return False
+
+    # Ensure uniqueness of numbers
+    if len(set(prediction["Main Numbers"])) != 5 or len(set(prediction["Euro Numbers"])) != 2:
+        return False
+
+    return True
+
 
 # Fitness function to evaluate predictions
 def fitness_function(prediction, weights, R_min, R_max, B_min, B_max, P_max):
@@ -248,29 +264,33 @@ def fitness_function(prediction, weights, R_min, R_max, B_min, B_max, P_max):
 
 # Generate a random prediction
 def generate_random_prediction(weights, R_min, R_max, B_min, B_max, P_max):
-    main_numbers = sorted(np.random.choice(range(1, 51), 5, replace=False))
-    euro_numbers = sorted(np.random.choice(range(1, 11), 2, replace=False))
-    randomness, balance = calculate_randomness_and_balance(main_numbers)
-    proximity = calculate_proximity(main_numbers, euro_numbers, last_known_main, last_known_euro)
-    is_novel = not validate_prediction(main_numbers, euro_numbers, eurojackpot_df)
-    score = compute_score(
-        {"Randomness": randomness, "Balance": balance, "Proximity": proximity, "Is Novel": is_novel},
-        weights,
-        R_min,
-        R_max,
-        B_min,
-        B_max,
-        P_max,
-    )
-    return {
-        "Main Numbers": main_numbers,
-        "Euro Numbers": euro_numbers,
-        "Randomness": randomness,
-        "Balance": balance,
-        "Proximity": proximity,
-        "Is Novel": is_novel,
-        "Score": score,  # Include score
-    }
+    while True:
+        main_numbers = sorted(np.random.choice(range(1, 51), 5, replace=False))
+        euro_numbers = sorted(np.random.choice(range(1, 13), 2, replace=False))  # Update range to 1-12
+        randomness, balance = calculate_randomness_and_balance(main_numbers)
+        proximity = calculate_proximity(main_numbers, euro_numbers, last_known_main, last_known_euro)
+        is_novel = not validate_prediction(main_numbers, euro_numbers, eurojackpot_df)
+        score = compute_score(
+            {"Randomness": randomness, "Balance": balance, "Proximity": proximity, "Is Novel": is_novel},
+            weights,
+            R_min,
+            R_max,
+            B_min,
+            B_max,
+            P_max,
+        )
+        prediction = {
+            "Main Numbers": main_numbers,
+            "Euro Numbers": euro_numbers,
+            "Randomness": randomness,
+            "Balance": balance,
+            "Proximity": proximity,
+            "Is Novel": is_novel,
+            "Score": score,
+        }
+        if is_valid_prediction(prediction):  # Validate prediction
+            return prediction
+
 
 # Generate initial population
 def generate_initial_population( weights, R_min, R_max, B_min, B_max, P_max):
@@ -281,69 +301,55 @@ def select_parents(population, fitness_scores):
     selected = random.choices(population, weights=fitness_scores, k=2)
     return selected
 
-# Crossover
 def crossover(parent1, parent2):
     if random.random() < CROSSOVER_RATE:
-        crossover_point = random.randint(1, 4)  # Between main numbers indices
-        child_main = sorted(parent1["Main Numbers"][:crossover_point] + parent2["Main Numbers"][crossover_point:])
-        child_euro = sorted(random.choice([parent1["Euro Numbers"], parent2["Euro Numbers"]]))
-        randomness, balance = calculate_randomness_and_balance(child_main)
-        proximity = calculate_proximity(child_main, child_euro, last_known_main, last_known_euro)
-        is_novel = not validate_prediction(child_main, child_euro, eurojackpot_df)
-        return {
-            "Main Numbers": child_main,
-            "Euro Numbers": child_euro,
-            "Randomness": randomness,
-            "Balance": balance,
-            "Proximity": proximity,
-            "Is Novel": is_novel,
-        }
+        while True:
+            crossover_point = random.randint(1, 4)  # Between main numbers indices
+            child_main = sorted(parent1["Main Numbers"][:crossover_point] + parent2["Main Numbers"][crossover_point:])
+            child_main = sorted(set(child_main))[:5]  # Ensure uniqueness and size
+
+            child_euro = sorted(random.choice([parent1["Euro Numbers"], parent2["Euro Numbers"]]))
+            if len(child_euro) < 2:
+                child_euro = sorted(np.random.choice(range(1, 13), 2, replace=False))
+
+            randomness, balance = calculate_randomness_and_balance(child_main)
+            proximity = calculate_proximity(child_main, child_euro, last_known_main, last_known_euro)
+            is_novel = not validate_prediction(child_main, child_euro, eurojackpot_df)
+            prediction = {
+                "Main Numbers": child_main,
+                "Euro Numbers": child_euro,
+                "Randomness": randomness,
+                "Balance": balance,
+                "Proximity": proximity,
+                "Is Novel": is_novel,
+            }
+            if is_valid_prediction(prediction):  # Validate offspring
+                return prediction
     return parent1  # No crossover
+
 
 def mutate(prediction, weights, R_min, R_max, B_min, B_max, P_max):
     if random.random() < MUTATION_RATE:
-        mutated_main = prediction["Main Numbers"][:]
-        if len(mutated_main) < 5:
-            mutated_main = sorted(np.random.choice(range(1, 51), 5, replace=False))
-        idx = random.randint(0, 4)
-        mutated_main[idx] = random.randint(1, 50)
-        mutated_main = sorted(set(mutated_main))[:5]
+        while True:
+            mutated_main = prediction["Main Numbers"][:]
+            if len(mutated_main) < 5:
+                mutated_main = sorted(np.random.choice(range(1, 51), 5, replace=False))
+            idx = random.randint(0, 4)
+            mutated_main[idx] = random.randint(1, 50)
+            mutated_main = sorted(set(mutated_main))[:5]
 
-        mutated_euro = prediction["Euro Numbers"][:]
-        if len(mutated_euro) < 2:
-            mutated_euro = sorted(np.random.choice(range(1, 11), 2, replace=False))
-        idx = random.randint(0, len(mutated_euro) - 1)
-        mutated_euro[idx] = random.randint(1, 10)
-        mutated_euro = sorted(set(mutated_euro))[:2]
+            mutated_euro = prediction["Euro Numbers"][:]
+            if len(mutated_euro) < 2:
+                mutated_euro = sorted(np.random.choice(range(1, 13), 2, replace=False))  # Update range to 1-12
+            idx = random.randint(0, len(mutated_euro) - 1)
+            mutated_euro[idx] = random.randint(1, 12)
+            mutated_euro = sorted(set(mutated_euro))[:2]
 
-        randomness, balance = calculate_randomness_and_balance(mutated_main)
-        proximity = calculate_proximity(mutated_main, mutated_euro, last_known_main, last_known_euro)
-        is_novel = not validate_prediction(mutated_main, mutated_euro, eurojackpot_df)
-        score = compute_score(
-            {"Randomness": randomness, "Balance": balance, "Proximity": proximity, "Is Novel": is_novel},
-            weights,
-            R_min,
-            R_max,
-            B_min,
-            B_max,
-            P_max,
-        )
-        return {
-            "Main Numbers": mutated_main,
-            "Euro Numbers": mutated_euro,
-            "Randomness": randomness,
-            "Balance": balance,
-            "Proximity": proximity,
-            "Is Novel": is_novel,
-            "Score": score,  # Include score
-        }
-    return prediction
-
-def validate_population(population, weights, R_min, R_max, B_min, B_max, P_max):
-    for prediction in population:
-        if "Score" not in prediction:
-            prediction["Score"] = compute_score(
-                prediction,
+            randomness, balance = calculate_randomness_and_balance(mutated_main)
+            proximity = calculate_proximity(mutated_main, mutated_euro, last_known_main, last_known_euro)
+            is_novel = not validate_prediction(mutated_main, mutated_euro, eurojackpot_df)
+            score = compute_score(
+                {"Randomness": randomness, "Balance": balance, "Proximity": proximity, "Is Novel": is_novel},
                 weights,
                 R_min,
                 R_max,
@@ -351,7 +357,37 @@ def validate_population(population, weights, R_min, R_max, B_min, B_max, P_max):
                 B_max,
                 P_max,
             )
-    return population
+            prediction = {
+                "Main Numbers": mutated_main,
+                "Euro Numbers": mutated_euro,
+                "Randomness": randomness,
+                "Balance": balance,
+                "Proximity": proximity,
+                "Is Novel": is_novel,
+                "Score": score,
+            }
+            if is_valid_prediction(prediction):  # Validate mutation
+                return prediction
+    return prediction
+
+
+def validate_population(population, weights, R_min, R_max, B_min, B_max, P_max):
+    valid_population = []
+    for prediction in population:
+        if is_valid_prediction(prediction):
+            if "Score" not in prediction:
+                prediction["Score"] = compute_score(
+                    prediction,
+                    weights,
+                    R_min,
+                    R_max,
+                    B_min,
+                    B_max,
+                    P_max,
+                )
+            valid_population.append(prediction)
+    return valid_population
+
 
 # Genetic Algorithm
 def genetic_algorithm():
