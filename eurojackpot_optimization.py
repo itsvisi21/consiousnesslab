@@ -6,6 +6,16 @@ from sklearn.metrics import mean_squared_error
 from xgboost import XGBRegressor
 import optuna
 import json
+import concurrent.futures
+import threading
+import logging
+
+# Set up logging for monitoring
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
+
+# Semaphore to limit the number of parallel threads
+SEMAPHORE_LIMIT = 5
+semaphore = threading.Semaphore(SEMAPHORE_LIMIT)
 
 # Define a function to normalize values
 def normalize(value, min_val, max_val):
@@ -136,57 +146,77 @@ def calculate_randomness_and_balance(predicted_main):
     balance = np.mean(predicted_main)   # Mean as balance factor
     return randomness, balance
 
-# Simulate proximity-driven predictions
-def generate_predictions(eurojackpot_df,num_simulations=10, proximity_target=1, score_min=0.75):
-    predictions = []
-    # Evaluate and rank predictions based on score
-    weights = {"w_R": 0.3, "w_B": 0.3, "w_P": 0.2, "w_N": 0.2}
-    R_min, R_max = eurojackpot_df["Randomness"].min(), eurojackpot_df["Randomness"].max()
-    B_min, B_max = eurojackpot_df["Balance"].min(), eurojackpot_df["Balance"].max()
-    P_max = 2
-    for _ in range(num_simulations):
+# Function to simulate a single prediction (parallelized)
+def simulate_single_prediction(eurojackpot_df, last_known_main, last_known_euro, weights, R_min, R_max, B_min, B_max, P_max, proximity_target, score_min):
+    with semaphore:
         while True:
             predicted_main = sorted(np.random.choice(range(1, 51), 5, replace=False))
             predicted_euro = sorted(np.random.choice(range(1, 11), 2, replace=False))
             proximity = calculate_proximity(predicted_main, predicted_euro, last_known_main, last_known_euro)
             if proximity == proximity_target:
-                # Calculate randomness and balance
                 randomness, balance = calculate_randomness_and_balance(predicted_main)
                 prediction = {
-                        "Main Numbers": predicted_main,
-                        "Euro Numbers": predicted_euro,
-                        "Proximity": proximity,
-                        "Randomness": randomness,
-                        "Balance": balance,
-                        "Is Novel": not validate_prediction(predicted_main, predicted_euro, eurojackpot_df)
-                    }; 
-                predicted_score= compute_score(prediction, weights, R_min, R_max, B_min, B_max, P_max)
+                    "Main Numbers": predicted_main,
+                    "Euro Numbers": predicted_euro,
+                    "Proximity": proximity,
+                    "Randomness": randomness,
+                    "Balance": balance,
+                    "Is Novel": not validate_prediction(predicted_main, predicted_euro, eurojackpot_df),
+                }
+                predicted_score = compute_score(prediction, weights, R_min, R_max, B_min, B_max, P_max)
                 if predicted_score >= score_min:
-                    prediction = {
-                        "Main Numbers": predicted_main,
-                        "Euro Numbers": predicted_euro,
-                        "Proximity": proximity,
-                        "Randomness": randomness,
-                        "Balance": balance,
-                        "Score": predicted_score,
-                        "Is Novel": not validate_prediction(predicted_main, predicted_euro, eurojackpot_df)
-                    }; 
-                    predictions.append(prediction)
-                    break
+                    prediction["Score"] = predicted_score
+                    logging.info(f"Generated prediction with score: {predicted_score:.3f}")
+                    return prediction
+
+# Parallel prediction generation
+def generate_predictions_parallel(eurojackpot_df, last_known_main, last_known_euro, num_simulations=10, proximity_target=1, score_min=0.75):
+    predictions = []
+    weights = {"w_R": 0.3, "w_B": 0.3, "w_P": 0.2, "w_N": 0.2}
+    R_min, R_max = eurojackpot_df["Randomness"].min(), eurojackpot_df["Randomness"].max()
+    B_min, B_max = eurojackpot_df["Balance"].min(), eurojackpot_df["Balance"].max()
+    P_max = 2
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(
+                simulate_single_prediction,
+                eurojackpot_df,
+                last_known_main,
+                last_known_euro,
+                weights,
+                R_min,
+                R_max,
+                B_min,
+                B_max,
+                P_max,
+                proximity_target,
+                score_min,
+            )
+            for _ in range(num_simulations)
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            predictions.append(future.result())
+
     return predictions
 
 
-# Now call generate_predictions()
-simulated_predictions = generate_predictions(eurojackpot_df, num_simulations=10, proximity_target=1,score_min=0.75)
+# Call the parallelized prediction generator
+ranked_predictions = generate_predictions_parallel(
+    eurojackpot_df,
+    last_known_main,
+    last_known_euro,
+    num_simulations=10,
+    proximity_target=1,
+    score_min=0.75,
+)
 
-# Rank the predictions by their score
-ranked_predictions = sorted(simulated_predictions, key=lambda x: x["Score"], reverse=True)
-
-# Print the ranked predictions
+# Rank predictions and print
+ranked_predictions = sorted(ranked_predictions, key=lambda x: x["Score"], reverse=True)
 print_pretty_output(best_params, ranked_predictions)
 
 # Final output for predictions
-if len(ranked_predictions) > 0:
+if ranked_predictions:
     print(f"\nMost Likely Prediction (Score: {ranked_predictions[0]['Score']:.3f}):")
     print(f"Main Numbers: {list(map(int, ranked_predictions[0]['Main Numbers']))}")
     print(f"Euro Numbers: {list(map(int, ranked_predictions[0]['Euro Numbers']))}")
